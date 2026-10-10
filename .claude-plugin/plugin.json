@@ -1,7 +1,7 @@
 ﻿{
   "name": "windows-leftover-cleanup",
-  "description": "Find and safely clean leftovers of uninstalled Windows apps (AppData, ProgramData, Program Files, dead startup entries, caches). Shows everything first, removes only what you approve, and sends it to the Recycle Bin.",
-  "version": "1.1.0",
+  "description": "Safely clean a Windows PC: choose between leftovers of uninstalled apps, unnecessary installed apps/games, and large/duplicate/old files. Shows everything first, removes only what you approve, and sends it to the Recycle Bin.",
+  "version": "1.2.0",
   "author": {
     "name": "FatihCapsek"
   },

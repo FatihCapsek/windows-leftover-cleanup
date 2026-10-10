@@ -1,12 +1,18 @@
-# windows-leftover-cleanup
+﻿# windows-leftover-cleanup
 
-A [Claude](https://claude.ai) skill that finds what uninstalled Windows apps left behind and cleans it up safely.
+A [Claude](https://claude.ai) skill that cleans up a Windows PC safely. You choose what to scan:
+
+| Scan | Finds |
+|---|---|
+| **Leftovers** | folders and settings left by uninstalled apps, caches, empty folders, dead startup entries and shortcuts |
+| **Apps** | installed programs, Store apps and games you probably don't need (Visual Studio leftovers, old .NET patches, telemetry tools, launchers without games…) |
+| **Files** | the largest files on every drive, old installers in Downloads, duplicate files, Windows update clutter |
 
 **[Türkçe açıklama aşağıda ↓](#türkçe)**
 
 ## What it does
 
-1. **Scans** (read-only): compares folders in `AppData` (Local, Roaming, LocalLow), `ProgramData` and `Program Files` with the list of installed programs, Store apps, running processes and services. It also finds caches, empty folders, startup entries that point to deleted programs, and broken shortcuts.
+1. **Scans** (read-only) what you picked. The leftover scan compares folders in `AppData` (Local, Roaming, LocalLow), `ProgramData` and `Program Files` with the list of installed programs, Store apps, running processes and services. It also finds caches, empty folders, startup entries that point to deleted programs, and broken shortcuts.
 2. **Shows you the list** in three groups, with sizes: safe leftovers, caches, and items you need to decide on. Nothing is removed yet.
 3. **Removes only what you approve.** Programs are uninstalled with their own uninstallers (MSI, Squirrel/Electron and others), so drivers and services go too. Leftover folders are **sent to the Recycle Bin**, never permanently deleted. Folders that need admin rights get a single UAC prompt.
 4. **Reports** what was removed, how much space was freed, and what was skipped and why.
@@ -36,6 +42,8 @@ Just ask, in any language. For example:
 - "Find the junk my old programs left behind and show it to me."
 - "Uninstall FACEIT completely."
 - "My C: drive is almost full, clean it up."
+- "Do I have apps I don't need?"
+- "What are the biggest files on my PC?"
 
 ## Requirements
 
@@ -47,8 +55,13 @@ Just ask, in any language. For example:
 ```
 skills/windows-leftover-cleanup/
 ├── SKILL.md                    # instructions for Claude
+├── references/
+│   ├── apps.md                 # how to judge installed apps
+│   └── files.md                # how to judge large files
 └── scripts/
-    ├── scan_leftovers.ps1      # read-only scanner
+    ├── scan_leftovers.ps1      # read-only: leftovers of uninstalled apps
+    ├── scan_apps.ps1           # read-only: installed apps, games, startup
+    ├── scan_files.ps1          # read-only: large / duplicate / old files
     └── recycle.ps1             # sends approved paths to the Recycle Bin
 ```
 
@@ -66,11 +79,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File skills\windows-leftover-clea
 
 ## Türkçe
 
-Kaldırdığın Windows programlarından geriye kalan dosyaları bulan ve güvenle temizleyen bir [Claude](https://claude.ai) skill'i.
+Windows bilgisayarını güvenle temizleyen bir [Claude](https://claude.ai) skill'i. Neyin taranacağını sen seçersin:
+
+| Tarama | Ne bulur |
+|---|---|
+| **Kalıntılar** | Kaldırılmış programlardan kalan klasörler, önbellekler, boş klasörler, bozuk açılış kayıtları ve kısayollar |
+| **Uygulamalar** | Muhtemelen ihtiyacın olmayan programlar, Store uygulamaları ve oyunlar (Visual Studio artıkları, eski .NET yamaları, veri toplayan araçlar, oyunsuz başlatıcılar…) |
+| **Dosyalar** | Tüm disklerdeki en büyük dosyalar, İndirilenler'deki eski kurulum dosyaları, kopya dosyalar, Windows güncelleme artıkları |
 
 ### Ne yapar?
 
-1. **Tarar** (hiçbir şey silmez): `AppData` (Local, Roaming, LocalLow), `ProgramData` ve `Program Files` klasörlerini yüklü programlar, Store uygulamaları, çalışan işlemler ve servislerle karşılaştırır. Önbellekleri, boş klasörleri, silinmiş programları açılışta başlatmaya çalışan kayıtları ve bozuk kısayolları da bulur.
+1. **Seçtiğin taramayı yapar** (hiçbir şey silmez). Kalıntı taraması `AppData` (Local, Roaming, LocalLow), `ProgramData` ve `Program Files` klasörlerini yüklü programlar, Store uygulamaları, çalışan işlemler ve servislerle karşılaştırır. Önbellekleri, boş klasörleri, silinmiş programları açılışta başlatmaya çalışan kayıtları ve bozuk kısayolları da bulur.
 2. **Listeyi gösterir.** Bulduklarını boyutlarıyla birlikte üç grupta sunar: güvenli kalıntılar, önbellek ve senin karar vermen gerekenler. Bu aşamada hiçbir şey silinmez.
 3. **Sadece onayladıklarını kaldırır.** Programları kendi kaldırma araçlarıyla kaldırır (MSI, Squirrel/Electron ve diğerleri), böylece sürücüleri ve servisleri de gider. Kalan klasörleri **Geri Dönüşüm Kutusu'na** gönderir, asla kalıcı olarak silmez. Yönetici izni gereken klasörler için tek bir onay penceresi açar.
 4. **Rapor verir:** Neyin silindiğini, ne kadar yer açıldığını, neyin atlandığını ve nedenini anlatır.
@@ -100,3 +119,5 @@ Claude'a normal bir şekilde yazman yeterli. Örneğin:
 - "Eski programlardan kalan gereksiz dosyaları bul ve bana göster."
 - "FACEIT'i tamamen kaldır."
 - "C: diskim doldu, temizle."
+- "PC'de gereksiz uygulama var mı?"
+- "En büyük dosyalarım neler?"

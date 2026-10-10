@@ -1,11 +1,11 @@
----
+﻿---
 name: windows-leftover-cleanup
-description: Find and clean leftovers of uninstalled apps on Windows (AppData, LocalLow, ProgramData, Program Files folders, dead startup entries and shortcuts, caches/temp) and properly uninstall programs, always showing the list first and sending approved items to the Recycle Bin. Use this whenever the user wants to free disk space, clean junk / gereksiz dosyalar / kalıntılar, remove an app "completely", uninstall something (e.g. "FACEIT'i kaldır", "Java'yı kaldır", "Krisp sürücülerini sil"), asks what old programs left behind, or says the PC is full or slow because of clutter — even if they don't say "leftover" or "cleanup".
+description: Windows PC cleanup with a choice of scans - leftovers of uninstalled apps (AppData, ProgramData, Program Files, dead startup entries, caches), unnecessary installed apps and games, and large / duplicate / old files on all drives - plus proper uninstalls. Always shows the list first and sends approved items to the Recycle Bin. Use this whenever the user wants to free disk space, clean junk / gereksiz dosyalar / kalıntılar, asks which apps or files are unnecessary ("pcde gereksiz uygulama var mı", "en büyük dosyalar neler"), wants to remove an app "completely" (e.g. "FACEIT'i kaldır", "Java'yı kaldır"), or says the PC is full or slow because of clutter - even if they don't say "leftover" or "cleanup".
 ---
 
-# Windows leftover cleanup
+# Windows PC cleanup
 
-This skill captures a cleanup workflow that worked well in practice: scan → explain → let the user choose → recycle → verify. The user's trust depends on two things: **nothing disappears that they did not approve**, and **everything removed can be brought back** until they empty the Recycle Bin themselves.
+This skill captures a cleanup workflow that worked well in practice: choose what to scan → scan → explain → let the user choose → remove/recycle → verify. The user's trust depends on two things: **nothing disappears that they did not approve**, and **everything removed can be brought back** until they empty the Recycle Bin themselves.
 
 Talk to the user in their own language (often Turkish). Use plain words: "Geri Dönüşüm Kutusu", "yönetici izni", not jargon.
 
@@ -17,9 +17,20 @@ Talk to the user in their own language (often Turkish). Use plain words: "Geri D
 - **Uninstall properly, don't just delete program folders.** A program that still has drivers, services or an uninstall entry should go through its own uninstaller first; deleting its folder leaves drivers running and broken registry entries.
 - **Don't touch Windows or shared runtimes**: `Microsoft`, `Packages`, `WindowsApps`, `dotnet`, VC++ redistributables, `Common Files`, Docker/WSL data, browser profiles of installed browsers, anything belonging to an installed program. Never touch `%LOCALAPPDATA%\Temp\claude` (Claude's own working files).
 
+## Step 0 — Choose what to scan
+
+There are three scans. Each is read-only and has its own script and reference:
+
+| Mode | Finds | Script | Read before judging |
+|---|---|---|---|
+| **Leftovers** | folders/settings left by uninstalled apps, caches, empty folders, dead startup entries and shortcuts | `scripts/scan_leftovers.ps1` (~20–60 s) | this file, Step 1 |
+| **Apps** | installed programs, Store apps and games that are probably unnecessary (Visual Studio leftovers, superseded .NET patches, telemetry, launchers without games, unused inbox apps) | `scripts/scan_apps.ps1` (~2 s) | `references/apps.md` |
+| **Files** | largest files on every drive, old installers/archives in Downloads, duplicates, Windows update/upgrade clutter | `scripts/scan_files.ps1` (~2–5 min) | `references/files.md` |
+
+If the request already makes the scope clear, skip the question and go: "FACEIT'i kaldır" → Apps (focused on that app) + its leftovers; "gereksiz uygulama var mı" → Apps; "en büyük dosyalar" → Files; "kalıntıları temizle" → Leftovers. Otherwise ask once with AskUserQuestion (multiSelect, options: the three modes plus "Hepsi / All", one-line description each, mention that the Files scan takes a few minutes), then start the chosen scans immediately in the same turn. When several modes are chosen, run the fast ones first and present all findings together, grouped by mode.
 ## Step 1 — Scan (read-only) — start immediately
 
-As soon as this skill is triggered, start the scan in the same turn. Don't ask "shall I scan?" or ask about preferences first: the scan only reads, changes nothing, and the user expects to see results right away. Tell them in one short line that you are scanning and that nothing will be deleted without their approval, then run it. If the request names a specific app ("FACEIT'i kaldır"), still run the scan, then focus the findings on that app (its uninstall entry, processes, services/drivers, folders, Run entries, shortcuts) and mention other big leftovers only briefly.
+Once the mode is known, start the scan in the same turn. Don't ask "shall I scan?" on top of the mode choice: scans only read, change nothing, and the user expects results right away. Tell them in one short line that you are scanning and that nothing will be deleted without their approval, then run it. If the request names a specific app ("FACEIT'i kaldır"), still run the scan, then focus the findings on that app (its uninstall entry, processes, services/drivers, folders, Run entries, shortcuts) and mention other big leftovers only briefly.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>/scripts/scan_leftovers.ps1"          # add -ShowInstalled to see matched folders too
@@ -58,11 +69,13 @@ Use this structure (translate headings to the user's language), sizes rounded, b
 **Dokunmadıklarım:** game saves, installed apps' data, Docker, browsers, …
 ```
 
+For the Apps and Files modes use the same A / B / C idea: A = clearly unnecessary (with the reason for each), B = optional extras, C = the user's decision (sizes, last used, what it would break), plus a short **Dokunmadıklarım** line naming what you deliberately kept and why (e.g. Rockstar Launcher because RDR2 needs it, the mic's Razer software, personal videos).
+
 State that everything goes to the Recycle Bin and in-use files are skipped. Then ask which groups/items to remove.
 
 ## Step 3 — Remove what was approved
 
-**Uninstall programs first** (close their processes before, `Stop-Process -Force`):
+**Uninstall programs first** (close their processes before, `Stop-Process -Force`). For Apps-mode removals follow the commands and the one-UAC, log-after-every-step pattern in `references/apps.md`:
 - Read `UninstallString` / `QuietUninstallString` from the Uninstall registry keys.
 - MSI products (`MsiExec.exe /I{GUID}`): `Start-Process msiexec.exe -ArgumentList '/x','{GUID}','/qb','/norestart' -Wait` — Windows shows its own UAC prompt; tell the user to click **Evet/Yes**.
 - Squirrel/Electron apps (`...\AppData\Local\<App>\Update.exe --uninstall`): run with `--uninstall -s`.
