@@ -17,7 +17,9 @@ Talk to the user in their own language (often Turkish). Use plain words: "Geri D
 - **Uninstall properly, don't just delete program folders.** A program that still has drivers, services or an uninstall entry should go through its own uninstaller first; deleting its folder leaves drivers running and broken registry entries.
 - **Don't touch Windows or shared runtimes**: `Microsoft`, `Packages`, `WindowsApps`, `dotnet`, VC++ redistributables, `Common Files`, Docker/WSL data, browser profiles of installed browsers, anything belonging to an installed program. Never touch `%LOCALAPPDATA%\Temp\claude` (Claude's own working files).
 
-## Step 1 — Scan (read-only)
+## Step 1 — Scan (read-only) — start immediately
+
+As soon as this skill is triggered, start the scan in the same turn. Don't ask "shall I scan?" or ask about preferences first: the scan only reads, changes nothing, and the user expects to see results right away. Tell them in one short line that you are scanning and that nothing will be deleted without their approval, then run it. If the request names a specific app ("FACEIT'i kaldır"), still run the scan, then focus the findings on that app (its uninstall entry, processes, services/drivers, folders, Run entries, shortcuts) and mention other big leftovers only briefly.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File "<skill>/scripts/scan_leftovers.ps1"          # add -ShowInstalled to see matched folders too

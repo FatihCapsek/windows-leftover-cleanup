@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "fatihcapsek-skills",
   "owner": {
     "name": "FatihCapsek"
@@ -8,7 +8,7 @@
       "name": "windows-leftover-cleanup",
       "source": "./",
       "description": "Find and safely clean leftovers of uninstalled Windows apps. Everything goes to the Recycle Bin, only after your approval.",
-      "version": "1.0.0"
+      "version": "1.1.0"
     }
   ]
 }
